@@ -6,6 +6,8 @@ import { TokenManager } from "../services/TokenManager";
 import { PostDatabase } from "../database/PostDatabase";
 import { CreatePostInputDTO, CreatePostOutputDTO } from "../dtos/post/createPost";
 import { Post } from "../models/Post";
+import { GetPostsInputDTO, GetPostsOutputDTO } from "../dtos/post/getPost";
+import { PostDBWithCreatorName } from "../models/Post";
 
 export class PostBusiness {
   constructor(
@@ -45,5 +47,41 @@ export class PostBusiness {
 
     return output
   }
+
+  public getPosts = async (
+    input: GetPostsInputDTO
+  ): Promise<GetPostsOutputDTO> => {
+    const { token } = input
+
+    const payload = this.tokenManager.getPayload(token)
+
+    if (!payload) {
+      throw new UnauthorizedError()
+    }
+
+    const postsDBwithCreatorName =
+      await this.postDatabase.getPostsWithCreatorName()
+    
+    const posts = postsDBwithCreatorName
+      .map((postWithCreatorName) => {
+        const post = new Post(
+          postWithCreatorName.id,
+          postWithCreatorName.content,
+          postWithCreatorName.likes,
+          postWithCreatorName.dislikes,
+          postWithCreatorName.created_at,
+          postWithCreatorName.updated_at,
+          postWithCreatorName.creator_id,
+          postWithCreatorName.creator_name
+        )
+
+        return post.toBusinessModel()
+    })
+
+    const output: GetPostsOutputDTO = posts
+
+    return output
+  }
+
 
 }

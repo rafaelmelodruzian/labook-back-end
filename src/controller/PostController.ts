@@ -3,6 +3,7 @@ import { PostBusiness } from "../business/PostBusiness";
 import { ZodError } from "zod";
 import { BaseError } from "../errors/BaseError";
 import { CreatePostSchema } from "../dtos/post/createPost";
+import { GetPostsSchema } from "../dtos/post/getPost";
 
 export class PostController {
   constructor(
@@ -32,5 +33,29 @@ export class PostController {
       }
     }
   }
+
+  public getPosts = async (req: Request, res: Response) => {
+    try {
+      const input = GetPostsSchema.parse({
+        token: req.headers.authorization
+      })
+
+      const output = await this.postBusiness.getPosts(input)
+
+      res.status(200).send(output)
+      
+    } catch (error) {
+      console.log(error)
+
+      if (error instanceof ZodError) {
+        res.status(400).send(error.issues)
+      } else if (error instanceof BaseError) {
+        res.status(error.statusCode).send(error.message)
+      } else {
+        res.status(500).send("Erro inesperado")
+      }
+    }
+  }
+
 
 }
