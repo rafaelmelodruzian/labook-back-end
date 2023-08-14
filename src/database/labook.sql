@@ -90,3 +90,11 @@ CREATE TABLE
 INSERT INTO
     likes_dislikes (user_id, post_id, like)
 VALUES ('u002', 'p001', 1), ('u003', 'p001', 1), ('u001', 'p002', 1), ('u003', 'p002', 0);
+
+
+INSERT INTO likes_dislikes (user_id, post_id, like)
+VALUES 
+  ('u002', 'p003', 1),
+  ('u003', 'p004', 1),
+  ('u001', 'p002', 1),
+  ('u004', 'p001', 0);
