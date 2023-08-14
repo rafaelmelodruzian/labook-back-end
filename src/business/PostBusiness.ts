@@ -8,6 +8,7 @@ import { CreatePostInputDTO, CreatePostOutputDTO } from "../dtos/post/createPost
 import { Post } from "../models/Post";
 import { GetPostsInputDTO, GetPostsOutputDTO } from "../dtos/post/getPost";
 import { PostDBWithCreatorName } from "../models/Post";
+import { EditPostInputDTO, EditPostOutputDTO } from "../dtos/post/editPost";
 
 export class PostBusiness {
   constructor(
@@ -79,6 +80,51 @@ export class PostBusiness {
     })
 
     const output: GetPostsOutputDTO = posts
+
+    return output
+  }
+
+
+
+  public editPost = async (
+    input: EditPostInputDTO
+  ): Promise<EditPostOutputDTO> => {
+    const { content, token, idToEdit } = input
+
+    const payload = this.tokenManager.getPayload(token)
+
+    if (!payload) {
+      throw new UnauthorizedError()
+    }
+
+    const postDB = await this.postDatabase
+      .findPostById(idToEdit)
+
+    if (!postDB) {
+      throw new NotFoundError("post com essa id não existe")
+    }
+
+    if (payload.id !== postDB.creator_id) {
+      throw new ForbiddenError("somente quem criou a post pode editá-la")
+    }
+
+    const post = new Post(
+      postDB.id,
+      postDB.content,
+      postDB.likes,
+      postDB.dislikes,
+      postDB.created_at,
+      postDB.updated_at,
+      postDB.creator_id,
+      payload.name
+    )
+
+    post.setContent(content)
+
+    const updatedPostDB = post.toDBModel()
+    await this.postDatabase.updatePost(updatedPostDB)
+
+    const output: EditPostOutputDTO = undefined
 
     return output
   }
