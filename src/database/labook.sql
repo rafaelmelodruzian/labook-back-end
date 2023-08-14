@@ -45,7 +45,7 @@ VALUES (
 CREATE TABLE
     posts (
         id TEXT PRIMARY KEY UNIQUE NOT NULL,
-        creator_id TEXT UNIQUE NOT NULL,
+        creator_id TEXT NOT NULL,
         content TEXT NOT NULL,
         likes INTEGER DEFAULT (0) NOT NULL,
         dislikes INTEGER DEFAULT (0) NOT NULL,
@@ -91,3 +91,9 @@ CREATE TABLE
 INSERT INTO
     likes_dislikes (user_id, post_id, like)
 VALUES ('u002', 'p001', 1), ('u003', 'p001', 1), ('u001', 'p002', 1), ('u003', 'p002', 0);
+
+
+
+drop table users;
+drop Table posts;
+drop Table likes_dislikes;
