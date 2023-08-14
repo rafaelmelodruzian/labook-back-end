@@ -19,3 +19,4 @@ const postController = new PostController(
 
 
 postRouter.post("/", postController.createPost)
+postRouter.get("/", postController.getPosts)
