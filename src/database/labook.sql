@@ -87,6 +87,7 @@ CREATE TABLE
         FOREIGN KEY (post_id) REFERENCES posts (id) ON UPDATE CASCADE ON DELETE CASCADE
     );
 
+-- Queries likeOrDeslike
 INSERT INTO
     likes_dislikes (user_id, post_id, like)
 VALUES ('u002', 'p001', 1), ('u003', 'p001', 1), ('u001', 'p002', 1), ('u003', 'p002', 0);
