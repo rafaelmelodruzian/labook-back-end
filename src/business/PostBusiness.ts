@@ -5,19 +5,20 @@ import { IdGenerator } from "../services/IdGenerator";
 import { TokenManager } from "../services/TokenManager";
 import { PostDatabase } from "../database/PostDatabase";
 import { CreatePostInputDTO, CreatePostOutputDTO } from "../dtos/post/createPost";
-import { Post } from "../models/Post";
+import { LikeDislikeDB, POST_LIKE, Post } from "../models/Post";
 import { GetPostsInputDTO, GetPostsOutputDTO } from "../dtos/post/getPost";
 import { PostDBWithCreatorName } from "../models/Post";
 import { EditPostInputDTO, EditPostOutputDTO } from "../dtos/post/editPost";
 import { DeletePostInputDTO, DeletePostOutputDTO } from "../dtos/post/deletePost";
 import { USER_ROLES } from "../models/User";
+import { LikeOrDislikePostInputDTO, LikeOrDislikePostOutputDTO } from "../dtos/post/likeOrDislikePost";
 
 export class PostBusiness {
   constructor(
     private postDatabase: PostDatabase,
     private idGenerator: IdGenerator,
     private tokenManager: TokenManager
-  ) {}
+  ) { }
 
   public createPost = async (
     input: CreatePostInputDTO
@@ -64,7 +65,7 @@ export class PostBusiness {
 
     const postsDBwithCreatorName =
       await this.postDatabase.getPostsWithCreatorName()
-    
+
     const posts = postsDBwithCreatorName
       .map((postWithCreatorName) => {
         const post = new Post(
@@ -79,7 +80,7 @@ export class PostBusiness {
         )
 
         return post.toBusinessModel()
-    })
+      })
 
     const output: GetPostsOutputDTO = posts
 
@@ -164,4 +165,77 @@ export class PostBusiness {
   }
 
 
+  public likeOrDislikePost = async (
+    input: LikeOrDislikePostInputDTO
+  ): Promise<LikeOrDislikePostOutputDTO> => {
+    const { token, like, postId } = input
+
+    const payload = this.tokenManager.getPayload(token)
+
+    if (!payload) {
+      throw new UnauthorizedError()
+    }
+
+    const PostDBWithCreatorName =
+      await this.postDatabase.findPostsWithCreatorNameById(postId)
+
+    if (!PostDBWithCreatorName) {
+      throw new NotFoundError("Não existe post com esse id")
+    }
+
+    const post = new Post(
+      PostDBWithCreatorName.id,
+      PostDBWithCreatorName.content,
+      PostDBWithCreatorName.likes,
+      PostDBWithCreatorName.dislikes,
+      PostDBWithCreatorName.created_at,
+      PostDBWithCreatorName.updated_at,
+      PostDBWithCreatorName.creator_id,
+      PostDBWithCreatorName.creator_name
+    )
+
+    const likeSQlite = like ? 1 : 0
+
+    const likeDislikeDB: LikeDislikeDB = {
+      user_id: payload.id,
+      post_id: postId,
+      like: likeSQlite
+    }
+
+    const likeDislikeExists =
+      await this.postDatabase.findLikeDislike(likeDislikeDB)
+
+    if (likeDislikeExists === POST_LIKE.ALREADY_LIKED) {
+      if (like) {
+        await this.postDatabase.removeLikeDislike(likeDislikeDB)
+        post.removeLike()
+      } else {
+        await this.postDatabase.updateLikeDislike(likeDislikeDB)
+        post.removeLike()
+        post.addDislike()
+      }
+
+    } else if (likeDislikeExists === POST_LIKE.ALREADY_DISLIKED) {
+      if (like === false) {
+        await this.postDatabase.removeLikeDislike(likeDislikeDB)
+        post.removeDislike()
+      } else {
+        await this.postDatabase.updateLikeDislike(likeDislikeDB)
+        post.removeDislike()
+        post.addLike()
+      }
+
+    } else {
+      await this.postDatabase.insertLikeDislike(likeDislikeDB)
+      like ? post.addLike() : post.addDislike()
+    }
+
+    const updatedPostDB = post.toDBModel()
+    await this.postDatabase.updatePost(updatedPostDB)
+
+    const output: LikeOrDislikePostOutputDTO = undefined
+
+    return output
+  }
 }
+

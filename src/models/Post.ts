@@ -37,6 +37,7 @@ export interface PostDB {
     post_id: string,
     like: number
   }
+
   
   export enum POST_LIKE {
     ALREADY_LIKED = "ALREADY LIKED",

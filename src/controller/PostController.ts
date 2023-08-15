@@ -10,6 +10,7 @@ import { ForbiddenError } from "../errors/ForbiddenError";
 import { NotFoundError } from "../errors/NotFoundError";
 import { UnauthorizedError } from "../errors/UnauthorizedError";
 import { DeletePostSchema } from "../dtos/post/deletePost";
+import { LikeOrDislikePostSchema } from "../dtos/post/likeOrDislikePost";
 
 export class PostController {
   constructor(
@@ -116,6 +117,30 @@ export class PostController {
     }
   }
 
+  public likeOrDislikePost = async (req: Request, res: Response) => {
+    try {
+      const input = LikeOrDislikePostSchema.parse({
+        token: req.headers.authorization,
+        postId: req.params.id,
+        like: req.body.like
+      })
+
+      const output = await this.postBusiness.likeOrDislikePost(input)
+
+      res.status(200).send(output)
+      
+    } catch (error) {
+      console.log(error)
+
+      if (error instanceof ZodError) {
+        res.status(400).send(error.issues)
+      } else if (error instanceof BaseError) {
+        res.status(error.statusCode).send(error.message)
+      } else {
+        res.status(500).send("Erro inesperado")
+      }
+    }
+  }
 
 
 
