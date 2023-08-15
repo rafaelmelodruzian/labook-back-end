@@ -1,4 +1,5 @@
 -- Active: 1692035360480@@127.0.0.1@3306
+
 -- Queries da tabela user
 CREATE TABLE
     users (
@@ -37,11 +38,9 @@ VALUES (
         '$2a$12$stwZ7yTpp6IWb93WeAT0i.aSKjyyAimu81Oi4rSr6ufrhYCve996.',
         'NORMAL'
     );
-    -- Queries da tabela posts
 
 
-
---Queries da tabela posts
+-- Queries da tabela posts
 CREATE TABLE
     posts (
         id TEXT PRIMARY KEY UNIQUE NOT NULL,
@@ -75,9 +74,7 @@ VALUES (
     );
 
 
-
-
---Queries da tabela likes_dislikes
+--Query de criação da tabela likes_dislikes
 CREATE TABLE
     likes_dislikes (
         user_id TEXT NOT NULL,
@@ -86,14 +83,3 @@ CREATE TABLE
         FOREIGN KEY (user_id) REFERENCES users (id) ON UPDATE CASCADE ON DELETE CASCADE,
         FOREIGN KEY (post_id) REFERENCES posts (id) ON UPDATE CASCADE ON DELETE CASCADE
     );
-
--- Queries likeOrDeslike
-INSERT INTO
-    likes_dislikes (user_id, post_id, like)
-VALUES ('u002', 'p001', 1), ('u003', 'p001', 1), ('u001', 'p002', 1), ('u003', 'p002', 0);
-
-
-
-drop table users;
-drop Table posts;
-drop Table likes_dislikes;
